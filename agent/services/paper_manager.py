@@ -1,0 +1,86 @@
+import shutil
+import hashlib
+import numpy as np
+from pathlib import Path
+from agent.config import Config
+from agent.models.text_embedder import TextEmbedder
+from agent.index.vector_store import VectorStore
+from agent.parsers.pdf_parser import PDFParser
+from agent.utils.logging import setup_logger
+
+logger = setup_logger(__name__)
+
+class PaperManager:
+    def __init__(self, text_embedder: TextEmbedder = None, vector_store: VectorStore = None):
+        self.text_embedder = text_embedder or TextEmbedder()
+        self.vector_store = vector_store or VectorStore()
+
+    def add_paper(self, file_path: str, topics: list[str] = None, move: bool = False, index: bool = True):
+        # Implementation with move before index
+        path = Path(file_path).resolve()
+        if not path.exists():
+            logger.error(f"File not found: {path}")
+            return
+
+        logger.info(f"Processing paper: {path.name}")
+        full_text, chunks = PDFParser.parse(str(path))
+        if not full_text:
+            logger.warning("No text extracted.")
+            return
+
+        assigned_topic = "Uncategorized"
+        file_embedding = None
+        
+        # Classification
+        if topics:
+             file_embedding = self.text_embedder.embed_texts([full_text])[0]
+             topic_embeddings = self.text_embedder.embed_texts(topics)
+             
+             sims = np.dot(topic_embeddings, file_embedding)
+             best_idx = np.argmax(sims)
+             assigned_topic = topics[best_idx]
+             logger.info(f"Classified as: {assigned_topic}")
+
+        # Move
+        final_path = path
+        if move and topics:
+            dest_dir = Config.PAPERS_DIR / assigned_topic
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            dest_path = dest_dir / path.name
+            if path != dest_path:
+                shutil.move(str(path), str(dest_path))
+                final_path = dest_path
+                logger.info(f"Moved to {final_path}")
+
+        # Index
+        if index:
+            if file_embedding is None:
+                 file_embedding = self.text_embedder.embed_texts([full_text])[0]
+            
+            file_hash = hashlib.sha256(full_text.encode()).hexdigest()
+            metadata = {
+                "path": str(final_path),
+                "filename": final_path.name,
+                "sha256": file_hash,
+                "topic": assigned_topic
+            }
+            self.vector_store.add_paper_file(file_hash, file_embedding, metadata)
+
+            if chunks:
+                chunk_texts = [c["text"] for c in chunks]
+                chunk_embeddings = self.text_embedder.embed_texts(chunk_texts)
+                chunk_ids = [f"{file_hash}_{i}" for i in range(len(chunks))]
+                chunk_metadatas = []
+                for i, c in enumerate(chunks):
+                    m = c.copy()
+                    del m["text"]
+                    m["path"] = str(final_path)
+                    m["filename"] = final_path.name
+                    chunk_metadatas.append(m)
+                self.vector_store.add_paper_chunks(chunk_ids, chunk_embeddings, chunk_metadatas, chunk_texts)
+                logger.info(f"Indexed {len(chunks)} chunks.")
+
+    def batch_organize(self, root_dir: str, topics: list[str]):
+        root = Path(root_dir)
+        for pdf_file in root.glob("**/*.pdf"):
+            self.add_paper(str(pdf_file), topics, move=True, index=True)

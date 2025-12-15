@@ -1,0 +1,26 @@
+2025-12-15 17:44:18,309 - agent.models.text_embedder - INFO - Loading Text Embedder: sentence-transformers/all-MiniLM-L6-v2 on cuda
+2025-12-15 17:49:30,971 - agent.models.text_embedder - INFO - Loading Text Embedder: sentence-transformers/all-MiniLM-L6-v2 on cuda
+2025-12-15 18:12:52,297 - agent.index.vector_store - INFO - Initializing VectorStore at /data1/private/renhaokai/Project/DuoMoTai/Experiment2/data/index
+2025-12-15 18:12:52,741 - agent.services.paper_manager - INFO - Processing paper: test_paper.pdf
+2025-12-15 18:12:53,298 - agent.services.paper_manager - INFO - Classified as: CV
+2025-12-15 18:12:53,299 - agent.services.paper_manager - INFO - Moved to /data1/private/renhaokai/Project/DuoMoTai/Experiment2/data/papers/CV/test_paper.pdf
+2025-12-15 18:12:53,382 - agent.services.paper_manager - INFO - Indexed 1 chunks.
+2025-12-15 18:14:35,862 - agent.models.text_embedder - INFO - Loading Text Embedder: sentence-transformers/all-MiniLM-L6-v2 on cuda
+2025-12-15 18:14:48,746 - agent.index.vector_store - INFO - Initializing VectorStore at /data1/private/renhaokai/Project/DuoMoTai/Experiment2/data/index
+2025-12-15 18:14:49,006 - agent.services.search_service - INFO - Searching for: computer vision
+2025-12-15 18:17:43,285 - agent.models.image_embedder - INFO - Loading Image Embedder: ViT-B-32 (laion2b_s34b_b79k) on cuda
+2025-12-15 19:29:40,671 - agent.models.image_embedder - INFO - Loading Image Embedder: ViT-B-32 (laion2b_s34b_b79k) on cuda
+2025-12-15 22:32:56,226 - agent.models.text_embedder - INFO - Loading Text Embedder: sentence-transformers/all-MiniLM-L6-v2 on cuda
+2025-12-15 22:33:12,737 - agent.index.vector_store - INFO - Initializing VectorStore at /data1/private/renhaokai/Project/DuoMoTai/Experiment2/data/index
+2025-12-15 22:33:13,008 - agent.services.paper_manager - ERROR - File not found: /data1/private/renhaokai/Project/DuoMoTai/Experiment2/test_paper.pdf
+2025-12-15 22:34:19,024 - agent.models.text_embedder - INFO - Loading Text Embedder: sentence-transformers/all-MiniLM-L6-v2 on cuda
+2025-12-15 22:34:42,837 - agent.index.vector_store - INFO - Initializing VectorStore at /data1/private/renhaokai/Project/DuoMoTai/Experiment2/data/index
+2025-12-15 22:34:43,105 - agent.services.paper_manager - INFO - Processing paper: test_paper.pdf
+2025-12-15 22:34:43,802 - agent.services.paper_manager - INFO - Classified as: CV
+2025-12-15 22:34:43,802 - agent.services.paper_manager - INFO - Moved to /data1/private/renhaokai/Project/DuoMoTai/Experiment2/data/papers/CV/test_paper.pdf
+2025-12-15 22:34:43,993 - agent.services.paper_manager - INFO - Indexed 1 chunks.
+2025-12-15 22:34:58,405 - agent.models.image_embedder - INFO - Loading Image Embedder: ViT-B-32 (laion2b_s34b_b79k) on cuda
+2025-12-15 22:46:53,204 - agent.models.text_embedder - INFO - Loading Text Embedder: sentence-transformers/all-MiniLM-L6-v2 on cuda
+2025-12-15 22:48:28,256 - agent.models.text_embedder - INFO - Loading Text Embedder: sentence-transformers/all-MiniLM-L6-v2 on cuda
+2025-12-15 22:48:40,439 - agent.index.vector_store - INFO - Initializing VectorStore at /data1/private/renhaokai/Project/DuoMoTai/Experiment2/data/index
+2025-12-15 22:48:40,667 - agent.services.search_service - INFO - Searching for: 计算机视觉
