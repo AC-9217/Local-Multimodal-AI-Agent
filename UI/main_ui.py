@@ -1,6 +1,8 @@
 import sys
 import os
+import shutil
 import traceback
+from pathlib import Path
 
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -17,6 +19,7 @@ try:
     from agent.services.paper_manager import PaperManager
     from agent.services.search_service import SearchService
     from agent.services.image_search import ImageSearchService
+    from agent.config import Config
 except ImportError as e:
     print(f"Error importing backend modules: {e}")
     print("Please ensure you are running this from the correct environment and directory.")
@@ -77,11 +80,13 @@ class MainWindow(QMainWindow):
         # Tabs
         self.add_paper_tab = self.create_add_paper_tab()
         self.search_paper_tab = self.create_search_paper_tab()
+        self.add_image_tab = self.create_add_image_tab()
         self.search_image_tab = self.create_search_image_tab()
         self.manage_tab = self.create_manage_tab()
 
         self.central_widget.addTab(self.add_paper_tab, "添加论文")
         self.central_widget.addTab(self.search_paper_tab, "搜索论文")
+        self.central_widget.addTab(self.add_image_tab, "添加图片")
         self.central_widget.addTab(self.search_image_tab, "以文搜图")
         self.central_widget.addTab(self.manage_tab, "系统管理")
 
@@ -276,7 +281,95 @@ class MainWindow(QMainWindow):
             details += f"主题: {meta.get('topic')}\n"
             self.paper_details_text.setText(details)
 
-    # --- Tab 3: Search Image ---
+    # --- Tab 3: Add Image ---
+    def create_add_image_tab(self):
+        widget = QWidget()
+        layout = QVBoxLayout()
+
+        # File Selection
+        file_layout = QHBoxLayout()
+        self.img_path_input = QLineEdit()
+        self.img_path_input.setPlaceholderText("选择图片文件...")
+        browse_btn = QPushButton("浏览")
+        browse_btn.clicked.connect(self.browse_image)
+        file_layout.addWidget(self.img_path_input)
+        file_layout.addWidget(browse_btn)
+
+        # Options
+        self.copy_img_checkbox = QCheckBox("复制到系统图片库 (data/images)")
+        self.copy_img_checkbox.setChecked(True)
+
+        # Action Button
+        self.add_img_btn = QPushButton("添加并索引图片")
+        self.add_img_btn.clicked.connect(self.run_add_image)
+        self.add_img_btn.setStyleSheet("background-color: #2196F3; color: white; font-weight: bold; padding: 5px;")
+
+        # Log Output
+        self.add_img_log = QTextEdit()
+        self.add_img_log.setReadOnly(True)
+
+        layout.addLayout(file_layout)
+        layout.addWidget(self.copy_img_checkbox)
+        layout.addWidget(self.add_img_btn)
+        layout.addWidget(QLabel("日志:"))
+        layout.addWidget(self.add_img_log)
+
+        widget.setLayout(layout)
+        return widget
+
+    def browse_image(self):
+        fname, _ = QFileDialog.getOpenFileName(self, "选择图片", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)")
+        if fname:
+            self.img_path_input.setText(fname)
+
+    def run_add_image(self):
+        path = self.img_path_input.text()
+        if not path:
+            QMessageBox.warning(self, "输入错误", "请选择图片文件。")
+            return
+        
+        copy_to_lib = self.copy_img_checkbox.isChecked()
+
+        self.add_img_log.append(f"正在处理图片: {path}...")
+        self.add_img_btn.setEnabled(False)
+
+        def task():
+            try:
+                final_path = path
+                if copy_to_lib:
+                    # Create target directory if not exists
+                    target_dir = Config.IMAGES_DIR
+                    if not target_dir.exists():
+                        target_dir.mkdir(parents=True)
+                    
+                    src = Path(path)
+                    dest = target_dir / src.name
+                    # Avoid overwriting or handle duplicates? For now simple copy
+                    shutil.copy2(src, dest)
+                    final_path = str(dest)
+                    self.add_img_log.append(f"已复制到: {final_path}")
+
+                iss = self.get_image_service()
+                
+                # Index the directory containing the image
+                parent_dir = str(Path(final_path).parent)
+                iss.index_images(parent_dir) 
+                
+                return "Success"
+            except Exception as e:
+                raise e
+
+        self.worker_add_img = WorkerThread(task)
+        self.worker_add_img.finished.connect(lambda res: self.on_add_image_finished(res))
+        self.worker_add_img.error.connect(self.on_worker_error)
+        self.worker_add_img.start()
+
+    def on_add_image_finished(self, result):
+        self.add_img_log.append("图片添加及索引成功。")
+        self.add_img_btn.setEnabled(True)
+        self.status_bar.showMessage("图片添加成功", 5000)
+
+    # --- Tab 4: Search Image ---
     def create_search_image_tab(self):
         widget = QWidget()
         layout = QVBoxLayout()
@@ -333,6 +426,29 @@ class MainWindow(QMainWindow):
                 path = meta.get('path')
                 dist = results["distances"][0][i] if results["distances"] else 0
                 
+                # Fix Path Issue: Convert potentially wrong absolute paths (Linux style) to correct local absolute paths
+                # Strategy: If path doesn't exist, check if it's relative to project root or data/images
+                
+                abs_path = os.path.abspath(path)
+                
+                if not os.path.exists(abs_path):
+                     # Try to recover path relative to project root
+                     # Assume path might be like /data1/private/.../DuoMoTai/Experiment2/data/images/xxx.jpg
+                     # We want to extract 'data/images/xxx.jpg'
+                     
+                     parts = path.replace('\\', '/').split('/')
+                     try:
+                         # Try to find 'data' folder index
+                         data_idx = parts.index('data')
+                         rel_path = os.path.join(*parts[data_idx:])
+                         # Construct new absolute path based on current project root
+                         possible_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', rel_path))
+                         
+                         if os.path.exists(possible_path):
+                             abs_path = possible_path
+                     except ValueError:
+                         pass
+                
                 # Container for one result
                 item_widget = QFrame()
                 item_widget.setFrameShape(QFrame.Shape.StyledPanel)
@@ -342,17 +458,18 @@ class MainWindow(QMainWindow):
                 lbl_img = QLabel()
                 lbl_img.setFixedSize(200, 200)
                 lbl_img.setStyleSheet("background-color: #ddd;")
-                if os.path.exists(path):
-                    pixmap = QPixmap(path)
+                
+                if os.path.exists(abs_path):
+                    pixmap = QPixmap(abs_path)
                     if not pixmap.isNull():
                         lbl_img.setPixmap(pixmap.scaled(lbl_img.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
                     else:
-                        lbl_img.setText("无效图片")
+                        lbl_img.setText("无效图片格式")
                 else:
-                    lbl_img.setText("文件未找到")
+                    lbl_img.setText(f"文件未找到\n{path}")
                 
                 # Info
-                lbl_info = QLabel(f"<b>{meta.get('filename')}</b><br>相关度: {dist:.4f}<br>路径: {path}")
+                lbl_info = QLabel(f"<b>{meta.get('filename')}</b><br>相关度: {dist:.4f}<br>原始路径: {path}<br>本地路径: {abs_path}")
                 lbl_info.setWordWrap(True)
                 
                 item_layout.addWidget(lbl_img)
@@ -362,7 +479,7 @@ class MainWindow(QMainWindow):
         else:
             self.img_results_layout.addWidget(QLabel("未找到相关图片。"))
 
-    # --- Tab 4: Management ---
+    # --- Tab 5: Management ---
     def create_manage_tab(self):
         widget = QWidget()
         layout = QVBoxLayout()
@@ -475,6 +592,7 @@ class MainWindow(QMainWindow):
         # Also print to logs if available
         if hasattr(self, 'add_log'): self.add_log.append(f"错误: {err_msg}")
         if hasattr(self, 'manage_log'): self.manage_log.append(f"错误: {err_msg}")
+        if hasattr(self, 'add_img_log'): self.add_img_log.append(f"错误: {err_msg}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

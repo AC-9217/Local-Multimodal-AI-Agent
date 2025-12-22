@@ -177,3 +177,18 @@
 2025-12-17 22:47:09,415 - agent.models.text_embedder - INFO - Loading Text Embedder: sentence-transformers/all-MiniLM-L6-v2 on cuda
 2025-12-17 22:47:22,585 - agent.index.vector_store - INFO - Initializing VectorStore at D:\fan\Project\PycharmProject\DuoMoTai\Experiment2\data\index
 2025-12-17 22:47:22,734 - agent.services.search_service - INFO - Searching for: 自然语言处理
+2025-12-22 21:48:26,481 - agent.models.image_embedder - INFO - Loading Image Embedder: ViT-B-32 (laion2b_s34b_b79k) on cuda
+2025-12-22 21:48:29,834 - agent.index.vector_store - INFO - Initializing VectorStore at D:\fan\Project\PycharmProject\DuoMoTai\Experiment2\data\index
+2025-12-22 21:48:30,020 - agent.services.image_search - INFO - Searching images for: 黄色
+2025-12-22 21:53:50,290 - agent.models.image_embedder - INFO - Loading Image Embedder: ViT-B-32 (laion2b_s34b_b79k) on cuda
+2025-12-22 21:53:53,435 - agent.index.vector_store - INFO - Initializing VectorStore at D:\fan\Project\PycharmProject\DuoMoTai\Experiment2\data\index
+2025-12-22 21:53:53,625 - agent.services.image_search - INFO - Searching images for: 黄色
+2025-12-22 21:54:01,274 - agent.services.image_search - INFO - Searching images for: 红
+2025-12-22 21:54:03,163 - agent.services.image_search - INFO - Searching images for: 红
+2025-12-22 21:54:03,697 - agent.services.image_search - INFO - Searching images for: 红
+2025-12-22 21:54:08,286 - agent.services.image_search - INFO - Searching images for: 红色
+2025-12-22 21:54:14,190 - agent.services.image_search - INFO - Searching images for: 蓝色的图片
+2025-12-22 21:54:17,164 - agent.services.image_search - INFO - Searching images for: 蓝
+2025-12-22 21:54:19,003 - agent.services.image_search - INFO - Searching images for: 红
+2025-12-22 21:54:23,416 - agent.services.image_search - INFO - Searching images for: 绿
+2025-12-22 21:54:28,973 - agent.services.image_search - INFO - Searching images for: 绿色
