@@ -5,6 +5,7 @@ import traceback
 from pathlib import Path
 
 # Add project root to sys.path
+# 将项目根目录添加到 sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
@@ -15,6 +16,7 @@ from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize
 from PyQt6.QtGui import QPixmap, QIcon, QAction
 
 # Import backend services
+# 导入后端服务
 try:
     from agent.services.paper_manager import PaperManager
     from agent.services.search_service import SearchService
@@ -27,6 +29,7 @@ except ImportError as e:
 class WorkerThread(QThread):
     """
     Generic worker thread to run tasks in the background.
+    通用工作线程，用于在后台运行任务。
     """
     finished = pyqtSignal(object)
     error = pyqtSignal(str)
@@ -52,7 +55,8 @@ class MainWindow(QMainWindow):
         self.resize(1000, 700)
         
         # Initialize Services
-        self.paper_manager = None # Lazy init to avoid startup lag
+        # 初始化服务
+        self.paper_manager = None # Lazy init to avoid startup lag # 延迟初始化以避免启动卡顿
         self.search_service = None
         self.image_service = None
 
@@ -78,6 +82,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         # Tabs
+        # 标签页
         self.add_paper_tab = self.create_add_paper_tab()
         self.search_paper_tab = self.create_search_paper_tab()
         self.add_image_tab = self.create_add_image_tab()
@@ -91,6 +96,7 @@ class MainWindow(QMainWindow):
         self.central_widget.addTab(self.manage_tab, "系统管理")
 
         # Status Bar
+        # 状态栏
         self.status_bar = self.statusBar()
         self.status_bar.showMessage("就绪")
 
@@ -100,6 +106,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # File Selection
+        # 文件选择
         file_layout = QHBoxLayout()
         self.file_path_input = QLineEdit()
         self.file_path_input.setPlaceholderText("选择 PDF 文件...")
@@ -109,10 +116,12 @@ class MainWindow(QMainWindow):
         file_layout.addWidget(browse_btn)
 
         # Topics
+        # 主题输入
         self.topics_input = QLineEdit()
         self.topics_input.setPlaceholderText("主题 (逗号分隔, 例如: CV, NLP, RL)")
 
         # Options
+        # 选项
         options_layout = QHBoxLayout()
         self.move_checkbox = QCheckBox("移动文件到对应主题文件夹")
         self.index_checkbox = QCheckBox("建立索引")
@@ -122,11 +131,13 @@ class MainWindow(QMainWindow):
         options_layout.addStretch()
 
         # Action Button
+        # 操作按钮
         self.add_btn = QPushButton("添加论文")
         self.add_btn.clicked.connect(self.run_add_paper)
         self.add_btn.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold; padding: 5px;")
 
         # Log Output
+        # 日志输出
         self.add_log = QTextEdit()
         self.add_log.setReadOnly(True)
 
@@ -181,6 +192,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # Search Bar
+        # 搜索栏
         search_layout = QHBoxLayout()
         self.paper_query_input = QLineEdit()
         self.paper_query_input.setPlaceholderText("请输入查询内容 (例如: 'Transformer 架构')")
@@ -191,10 +203,11 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(search_btn)
 
         # Options
+        # 选项
         opts_layout = QHBoxLayout()
         self.return_snippets_cb = QCheckBox("返回文本片段")
         self.return_snippets_cb.setChecked(False)
-        self.top_k_spin = QLineEdit("5") # Simple implementation
+        self.top_k_spin = QLineEdit("5") # Simple implementation # 简单实现
         self.top_k_spin.setFixedWidth(50)
         self.top_k_spin.setPlaceholderText("Top K")
         
@@ -204,6 +217,7 @@ class MainWindow(QMainWindow):
         opts_layout.addStretch()
 
         # Results Area
+        # 结果区域
         self.paper_results_list = QListWidget()
         self.paper_results_list.itemClicked.connect(self.show_paper_details)
         
@@ -249,7 +263,7 @@ class MainWindow(QMainWindow):
 
     def on_search_paper_finished(self, results):
         self.status_bar.showMessage("搜索完成。")
-        self.last_search_results = results # Store for details view
+        self.last_search_results = results # Store for details view # 保存以便详情视图使用
         
         if "files" in results and results["files"] and results["files"]["ids"] and results["files"]["ids"][0]:
             files = results["files"]
@@ -264,6 +278,7 @@ class MainWindow(QMainWindow):
              self.paper_results_list.addItem("未找到相关文件。")
 
         # Show snippets in details if available
+        # 如果有片段，则在详情中显示
         if "snippets" in results and results["snippets"]:
              self.paper_details_text.append("--- 找到相关片段 (点击文件查看详情) ---\n")
              snippets = results["snippets"]
@@ -287,6 +302,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # File Selection
+        # 文件选择
         file_layout = QHBoxLayout()
         self.img_path_input = QLineEdit()
         self.img_path_input.setPlaceholderText("选择图片文件...")
@@ -296,15 +312,18 @@ class MainWindow(QMainWindow):
         file_layout.addWidget(browse_btn)
 
         # Options
+        # 选项
         self.copy_img_checkbox = QCheckBox("复制到系统图片库 (data/images)")
         self.copy_img_checkbox.setChecked(True)
 
         # Action Button
+        # 操作按钮
         self.add_img_btn = QPushButton("添加并索引图片")
         self.add_img_btn.clicked.connect(self.run_add_image)
         self.add_img_btn.setStyleSheet("background-color: #2196F3; color: white; font-weight: bold; padding: 5px;")
 
         # Log Output
+        # 日志输出
         self.add_img_log = QTextEdit()
         self.add_img_log.setReadOnly(True)
 
@@ -338,6 +357,7 @@ class MainWindow(QMainWindow):
                 final_path = path
                 if copy_to_lib:
                     # Create target directory if not exists
+                    # 如果目标目录不存在则创建
                     target_dir = Config.IMAGES_DIR
                     if not target_dir.exists():
                         target_dir.mkdir(parents=True)
@@ -345,6 +365,7 @@ class MainWindow(QMainWindow):
                     src = Path(path)
                     dest = target_dir / src.name
                     # Avoid overwriting or handle duplicates? For now simple copy
+                    # 避免覆盖或处理重复？目前简单复制
                     shutil.copy2(src, dest)
                     final_path = str(dest)
                     self.add_img_log.append(f"已复制到: {final_path}")
@@ -352,6 +373,7 @@ class MainWindow(QMainWindow):
                 iss = self.get_image_service()
                 
                 # Index the directory containing the image
+                # 索引包含图片的目录
                 parent_dir = str(Path(final_path).parent)
                 iss.index_images(parent_dir) 
                 
@@ -375,6 +397,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # Search Bar
+        # 搜索栏
         search_layout = QHBoxLayout()
         self.img_query_input = QLineEdit()
         self.img_query_input.setPlaceholderText("描述图片内容 (例如: '海边日落')")
@@ -385,6 +408,7 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(search_btn)
 
         # Results Area
+        # 结果区域
         self.img_scroll_area = QScrollArea()
         self.img_scroll_area.setWidgetResizable(True)
         self.img_results_container = QWidget()
@@ -405,6 +429,7 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage("正在搜索图片...")
         
         # Clear previous results
+        # 清除以前的结果
         for i in reversed(range(self.img_results_layout.count())): 
             self.img_results_layout.itemAt(i).widget().setParent(None)
 
@@ -428,6 +453,8 @@ class MainWindow(QMainWindow):
                 
                 # Fix Path Issue: Convert potentially wrong absolute paths (Linux style) to correct local absolute paths
                 # Strategy: If path doesn't exist, check if it's relative to project root or data/images
+                # 修复路径问题：将可能错误的绝对路径（Linux 风格）转换为正确的本地绝对路径
+                # 策略：如果路径不存在，检查它是否相对于项目根目录或 data/images
                 
                 abs_path = os.path.abspath(path)
                 
@@ -435,13 +462,18 @@ class MainWindow(QMainWindow):
                      # Try to recover path relative to project root
                      # Assume path might be like /data1/private/.../DuoMoTai/Experiment2/data/images/xxx.jpg
                      # We want to extract 'data/images/xxx.jpg'
+                     # 尝试恢复相对于项目根目录的路径
+                     # 假设路径可能像 /data1/private/.../DuoMoTai/Experiment2/data/images/xxx.jpg
+                     # 我们想要提取 'data/images/xxx.jpg'
                      
                      parts = path.replace('\\', '/').split('/')
                      try:
                          # Try to find 'data' folder index
+                         # 尝试找到 'data' 文件夹的索引
                          data_idx = parts.index('data')
                          rel_path = os.path.join(*parts[data_idx:])
                          # Construct new absolute path based on current project root
+                         # 基于当前项目根目录构建新的绝对路径
                          possible_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', rel_path))
                          
                          if os.path.exists(possible_path):
@@ -450,11 +482,13 @@ class MainWindow(QMainWindow):
                          pass
                 
                 # Container for one result
+                # 单个结果的容器
                 item_widget = QFrame()
                 item_widget.setFrameShape(QFrame.Shape.StyledPanel)
                 item_layout = QHBoxLayout(item_widget)
                 
                 # Image Preview
+                # 图片预览
                 lbl_img = QLabel()
                 lbl_img.setFixedSize(200, 200)
                 lbl_img.setStyleSheet("background-color: #ddd;")
@@ -469,6 +503,7 @@ class MainWindow(QMainWindow):
                     lbl_img.setText(f"文件未找到\n{path}")
                 
                 # Info
+                # 信息
                 lbl_info = QLabel(f"<b>{meta.get('filename')}</b><br>相关度: {dist:.4f}<br>原始路径: {path}<br>本地路径: {abs_path}")
                 lbl_info.setWordWrap(True)
                 
@@ -485,6 +520,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # Batch Organize
+        # 批量整理
         group_batch = QFrame()
         group_batch.setFrameShape(QFrame.Shape.StyledPanel)
         gb_layout = QVBoxLayout(group_batch)
@@ -510,6 +546,7 @@ class MainWindow(QMainWindow):
         gb_layout.addWidget(btn_organize)
 
         # Index Images
+        # 建立图片索引
         group_idx = QFrame()
         group_idx.setFrameShape(QFrame.Shape.StyledPanel)
         gi_layout = QVBoxLayout(group_idx)
@@ -531,6 +568,7 @@ class MainWindow(QMainWindow):
         gi_layout.addWidget(btn_index)
 
         # Log
+        # 管理日志
         self.manage_log = QTextEdit()
         self.manage_log.setReadOnly(True)
 
@@ -590,6 +628,7 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage("发生错误")
         QMessageBox.critical(self, "错误", f"发生错误:\n{err_msg}")
         # Also print to logs if available
+        # 如果日志可用，也打印到日志
         if hasattr(self, 'add_log'): self.add_log.append(f"错误: {err_msg}")
         if hasattr(self, 'manage_log'): self.manage_log.append(f"错误: {err_msg}")
         if hasattr(self, 'add_img_log'): self.add_img_log.append(f"错误: {err_msg}")

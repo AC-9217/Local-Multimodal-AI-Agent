@@ -3,6 +3,15 @@ import os
 
 
 def create_pdf_paper(title: str, category: str, output_path: str) -> None:
+    """
+    Create a dummy PDF paper with title and category.
+    创建一个带有标题和类别的虚拟 PDF 论文。
+
+    Args:
+        title (str): Title of the paper. 论文标题。
+        category (str): Category of the paper. 论文类别。
+        output_path (str): Output path for the PDF. PDF 输出路径。
+    """
     doc = fitz.open()
     page = doc.new_page()
     page.insert_text((72, 72), title, fontsize=20)
@@ -19,10 +28,15 @@ def create_pdf_paper(title: str, category: str, output_path: str) -> None:
 
 
 def setup_test_data_pdf() -> None:
+    """
+    Generate a set of test PDF papers.
+    生成一组测试 PDF 论文。
+    """
     root = os.getcwd()
     pdf_dir = os.path.join(root, "pdf")
     os.makedirs(pdf_dir, exist_ok=True)
 
+    # Direction: Computer Vision
     # 方向：计算机视觉
     for i in range(1, 4):
         filename = os.path.join(pdf_dir, f"CV_paper_{i:02d}.pdf")
@@ -32,6 +46,7 @@ def setup_test_data_pdf() -> None:
             output_path=filename,
         )
 
+    # Direction: Natural Language Processing
     # 方向：自然语言处理
     for i in range(1, 4):
         filename = os.path.join(pdf_dir, f"NLP_paper_{i:02d}.pdf")
@@ -41,6 +56,7 @@ def setup_test_data_pdf() -> None:
             output_path=filename,
         )
 
+    # Direction: Reinforcement Learning
     # 方向：强化学习
     for i in range(1, 4):
         filename = os.path.join(pdf_dir, f"RL_paper_{i:02d}.pdf")
@@ -50,6 +66,7 @@ def setup_test_data_pdf() -> None:
             output_path=filename,
         )
 
+    # Direction: Data Mining
     # 方向：数据挖掘
     for i in range(1, 4):
         filename = os.path.join(pdf_dir, f"DM_paper_{i:02d}.pdf")
@@ -59,6 +76,7 @@ def setup_test_data_pdf() -> None:
             output_path=filename,
         )
 
+    # Direction: Machine Learning
     # 方向：机器学习
     for i in range(1, 4):
         filename = os.path.join(pdf_dir, f"ML_paper_{i:02d}.pdf")

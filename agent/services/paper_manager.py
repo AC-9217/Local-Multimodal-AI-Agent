@@ -11,11 +11,33 @@ from agent.utils.logging import setup_logger
 logger = setup_logger(__name__)
 
 class PaperManager:
+    """
+    Service for managing paper ingestion, classification, and organization.
+    用于管理论文摄入、分类和整理的服务。
+    """
     def __init__(self, text_embedder: TextEmbedder = None, vector_store: VectorStore = None):
+        """
+        Initialize the PaperManager.
+        初始化 PaperManager。
+
+        Args:
+            text_embedder (TextEmbedder, optional): Text embedding model. 文本嵌入模型。
+            vector_store (VectorStore, optional): Vector database interface. 向量数据库接口。
+        """
         self.text_embedder = text_embedder or TextEmbedder()
         self.vector_store = vector_store or VectorStore()
 
     def add_paper(self, file_path: str, topics: list[str] = None, move: bool = False, index: bool = True):
+        """
+        Add a paper: parse, classify, move, and index.
+        添加论文：解析、分类、移动并索引。
+
+        Args:
+            file_path (str): Path to the PDF file. PDF 文件路径。
+            topics (list[str], optional): List of topics for classification. 用于分类的主题列表。
+            move (bool): Whether to move the file to a topic directory. 是否将文件移动到主题目录。
+            index (bool): Whether to index the paper in the vector store. 是否在向量存储中索引论文。
+        """
         # Implementation with move before index
         path = Path(file_path).resolve()
         if not path.exists():
@@ -81,6 +103,14 @@ class PaperManager:
                 logger.info(f"Indexed {len(chunks)} chunks.")
 
     def batch_organize(self, root_dir: str, topics: list[str]):
+        """
+        Batch organize all PDFs in a directory.
+        批量整理目录中的所有 PDF。
+
+        Args:
+            root_dir (str): Root directory to scan. 要扫描的根目录。
+            topics (list[str]): List of topics for classification. 用于分类的主题列表。
+        """
         root = Path(root_dir)
         for pdf_file in root.glob("**/*.pdf"):
             self.add_paper(str(pdf_file), topics, move=True, index=True)
