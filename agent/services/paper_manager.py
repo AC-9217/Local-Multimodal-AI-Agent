@@ -27,6 +27,22 @@ class PaperManager:
         self.text_embedder = text_embedder or TextEmbedder()
         self.vector_store = vector_store or VectorStore()
 
+    def _compute_file_embedding(self, full_text: str, chunks: list[dict]):
+        """
+        Compute file embedding using mean pooling of chunks if available.
+        如果可用，使用块的平均池化计算文件嵌入。
+        """
+        if chunks:
+            chunk_texts = [c["text"] for c in chunks]
+            chunk_embeddings = self.text_embedder.embed_texts(chunk_texts)
+            file_embedding = np.mean(chunk_embeddings, axis=0)
+            norm = np.linalg.norm(file_embedding)
+            if norm > 0:
+                file_embedding = file_embedding / norm
+            return file_embedding
+        else:
+            return self.text_embedder.embed_texts([full_text])[0]
+
     def add_paper(self, file_path: str, topics: list[str] = None, move: bool = False, index: bool = True):
         """
         Add a paper: parse, classify, move, and index.
@@ -55,7 +71,7 @@ class PaperManager:
         
         # Classification
         if topics:
-             file_embedding = self.text_embedder.embed_texts([full_text])[0]
+             file_embedding = self._compute_file_embedding(full_text, chunks)
              topic_embeddings = self.text_embedder.embed_texts(topics)
              
              sims = np.dot(topic_embeddings, file_embedding)
@@ -77,7 +93,7 @@ class PaperManager:
         # Index
         if index:
             if file_embedding is None:
-                 file_embedding = self.text_embedder.embed_texts([full_text])[0]
+                 file_embedding = self._compute_file_embedding(full_text, chunks)
             
             file_hash = hashlib.sha256(full_text.encode()).hexdigest()
             metadata = {
@@ -90,6 +106,12 @@ class PaperManager:
 
             if chunks:
                 chunk_texts = [c["text"] for c in chunks]
+                # If we computed file_embedding using chunks, we might have already computed these embeddings,
+                # but to keep code simple and avoid passing large arrays around or complicating the helper, 
+                # we re-compute or we could have returned them. 
+                # Given the scale, re-computing or just caching in the helper if needed. 
+                # For now, standard re-compute is safer/simpler unless performance is critical.
+                # Optimization: We can reuse chunk embeddings if we want.
                 chunk_embeddings = self.text_embedder.embed_texts(chunk_texts)
                 chunk_ids = [f"{file_hash}_{i}" for i in range(len(chunks))]
                 chunk_metadatas = []
@@ -112,5 +134,9 @@ class PaperManager:
             topics (list[str]): List of topics for classification. 用于分类的主题列表。
         """
         root = Path(root_dir)
-        for pdf_file in root.glob("**/*.pdf"):
-            self.add_paper(str(pdf_file), topics, move=True, index=True)
+        pdf_files = list(root.glob("**/*.pdf"))
+        logger.info(f"Found {len(pdf_files)} PDF files to process.")
+        
+        for pdf_file in pdf_files:
+            if pdf_file.exists():
+                self.add_paper(str(pdf_file), topics, move=True, index=True)
