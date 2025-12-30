@@ -26,9 +26,10 @@ class Config:
     TEXT_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
     # OpenCLIP model config
     # 图像嵌入模型配置 (CLIP)
-    # 升级为 Large 模型以利用 RTX 3060 性能 (768维)
-    IMAGE_MODEL_NAME = "ViT-L-14"
-    IMAGE_MODEL_PRETRAINED = "laion2b_s32b_b82k"
+    # 升级为 Huge 多语言模型 (XLM-Roberta) 以支持中文并提供更高精度 (1024维)
+    # 注意：首次运行会自动下载模型，且索引与旧版(768维)不兼容，建议重建索引
+    IMAGE_MODEL_NAME = "xlm-roberta-large-ViT-H-14"
+    IMAGE_MODEL_PRETRAINED = "frozen_laion5b_s13b_b90k"
 
     # Device
     # 设备选择: 如果有 CUDA 则使用 CUDA，否则使用 CPU
@@ -48,7 +49,8 @@ class Config:
     # 论文片段集合
     COLLECTION_PAPERS_CHUNKS = "papers_chunks"
     # 图片集合
-    COLLECTION_IMAGES = "images"
+    # 更新集合名称以避免与旧维度(768)冲突
+    COLLECTION_IMAGES = "images_xlm_h14"
 
     @classmethod
     def setup(cls):
